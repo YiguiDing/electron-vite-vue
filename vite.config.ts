@@ -4,6 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron'
 import renderer from 'vite-plugin-electron-renderer'
 import { notBundle } from 'vite-plugin-electron/plugin'
+import swc from "rollup-plugin-swc";
 import pkg from './package.json'
 
 // https://vitejs.dev/config/
@@ -13,14 +14,29 @@ export default defineConfig(({ command }) => {
   const isServe = command === 'serve'
   const isBuild = command === 'build'
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG
-
+	const swcPlugin = swc({
+		sourceMaps: sourcemap,
+		minify: isBuild,
+		module: { type: "es6" },
+		jsc: {
+			parser: {
+				syntax: "typescript",
+				decorators: true,
+			},
+			target: "esnext",
+			transform: {
+				decoratorMetadata: true,
+			},
+		},
+  });
+  
   return {
     plugins: [
       vue(),
       electron([
         {
           // Main process entry file of the Electron App.
-          entry: 'electron/main/index.ts',
+          entry: 'electron/main.ts',
           onstart({ startup }) {
             if (process.env.VSCODE_DEBUG) {
               console.log(/* For `.vscode/.debug.script.mjs` */'[startup] Electron App')
@@ -32,7 +48,7 @@ export default defineConfig(({ command }) => {
             build: {
               sourcemap,
               minify: isBuild,
-              outDir: 'dist-electron/main',
+              outDir: 'dist-electron/',
               rollupOptions: {
                 // Some third-party Node.js libraries may not be built correctly by Vite, especially `C/C++` addons, 
                 // we can use `external` to exclude them to ensure they work correctly.
@@ -41,15 +57,17 @@ export default defineConfig(({ command }) => {
                 external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
               },
             },
+						esbuild: false,
             plugins: [
               // This is just an option to improve build performance, it's non-deterministic!
               // e.g. `import log from 'electron-log'` -> `const log = require('electron-log')` 
               isServe && notBundle(),
+              swcPlugin
             ],
           },
         },
         {
-          entry: 'electron/preload/index.ts',
+          entry: 'electron/service/AppService/preload.ts',
           onstart({ reload }) {
             // Notify the Renderer process to reload the page when the Preload scripts build is complete, 
             // instead of restarting the entire Electron App.
@@ -59,13 +77,15 @@ export default defineConfig(({ command }) => {
             build: {
               sourcemap: sourcemap ? 'inline' : undefined, // #332
               minify: isBuild,
-              outDir: 'dist-electron/preload',
+              outDir: 'dist-electron/service/AppService/',
               rollupOptions: {
                 external: Object.keys('dependencies' in pkg ? pkg.dependencies : {}),
               },
             },
+						esbuild: false,
             plugins: [
               isServe && notBundle(),
+              swcPlugin
             ],
           },
         }

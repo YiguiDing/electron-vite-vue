@@ -1,22 +1,37 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-defineProps<{ msg: string }>()
-
-const count = ref(0)
+import { ref, watchEffect } from "vue";
+import { demo_echo, demo_add, demo_div, demo_mut, demo_sub } from "../api";
+const A = ref(1);
+const B = ref(1);
+const AddResult = ref<undefined | number>(undefined);
+const SubResult = ref<undefined | number>(undefined);
+const MutResult = ref<undefined | number>(undefined);
+const DivResult = ref<undefined | number>(undefined);
+watchEffect(async () => {
+  AddResult.value = await demo_add(A.value, B.value);
+  SubResult.value = await demo_sub(A.value, B.value);
+  MutResult.value = await demo_mut(A.value, B.value);
+  DivResult.value = await demo_div(A.value, B.value);
+});
+setInterval(async () => {
+  console.log("echo:" + (await demo_echo("Hello World")));
+}, 1000);
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
-
+  <h1>Electron + Vite + Vue</h1>
   <div class="card">
-    <button type="button" @click="count++">count is {{ count }}</button>
+    <button type="button" @click="A++">A++ == {{ A }}</button>
+    <button type="button" @click="B++">B++ == {{ B }}</button>
+    <p>A + B = {{ AddResult }}</p>
+    <p>A - B = {{ SubResult }}</p>
+    <p>A * B = {{ MutResult }}</p>
+    <p>A / B = {{ DivResult }}</p>
     <p>
       Edit
       <code>components/HelloWorld.vue</code> to test HMR
     </p>
   </div>
-
   <p>
     Check out
     <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
