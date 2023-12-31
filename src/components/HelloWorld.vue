@@ -1,6 +1,13 @@
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
-import { demo_echo, demo_add, demo_div, demo_mut, demo_sub } from "../api";
+import { onMounted, ref, watchEffect } from "vue";
+import {
+  demo_echo,
+  demo_add,
+  demo_div,
+  demo_mut,
+  demo_sub,
+  current_time,
+} from "../api";
 const A = ref(1);
 const B = ref(1);
 const AddResult = ref<undefined | number>(undefined);
@@ -13,16 +20,18 @@ watchEffect(async () => {
   MutResult.value = await demo_mut(A.value, B.value);
   DivResult.value = await demo_div(A.value, B.value);
 });
-setInterval(async () => {
+onMounted(async () => {
   console.log("echo:" + (await demo_echo("Hello World")));
-}, 1000);
+});
+let now = current_time();
 </script>
 
 <template>
   <h1>Electron + Vite + Vue</h1>
+  <p>{{ now }}</p>
   <div class="card">
-    <button type="button" @click="A++">A++ == {{ A }}</button>
-    <button type="button" @click="B++">B++ == {{ B }}</button>
+    <button type="button" @click="++A">++A == {{ A }}</button>
+    <button type="button" @click="++B">++B == {{ B }}</button>
     <p>A + B = {{ AddResult }}</p>
     <p>A - B = {{ SubResult }}</p>
     <p>A * B = {{ MutResult }}</p>

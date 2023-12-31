@@ -2,11 +2,16 @@ import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { release } from "node:os";
 import { join } from "node:path";
 import { Component } from "../../utils";
-import { VITE_DEV_SERVER_URL, DIST, DIST_ELECTRON, VITE_PUBLIC } from "../../env";
+import {
+  VITE_DEV_SERVER_URL,
+  DIST,
+  DIST_ELECTRON,
+  VITE_PUBLIC,
+} from "../../env";
 
 @Component()
 export class ElectronApp {
-  win!: BrowserWindow;
+  win: BrowserWindow;
   preload = join(DIST_ELECTRON, "./service/AppService/preload.js");
   indexHtml = join(DIST, "index.html");
   constructor() {}
@@ -83,12 +88,7 @@ export class ElectronApp {
     }
 
     // Test actively push message to the Electron-Renderer
-    this.win.webContents.on("did-finish-load", () => {
-      this.win.webContents.send(
-        "main-process-message",
-        new Date().toLocaleString()
-      );
-    });
+    this.win.webContents.on("did-finish-load", () => {});
 
     // Make all links open with the browser, not with the application
     this.win.webContents.setWindowOpenHandler(({ url }) => {
